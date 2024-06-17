@@ -2,7 +2,6 @@ import time
 import os
 import cv2
 from matplotlib import pyplot
-import imutils
 import numpy as np
 import tempfile
 import subprocess

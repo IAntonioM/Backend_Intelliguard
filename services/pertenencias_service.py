@@ -32,12 +32,17 @@ class PertenenciasServices:
 
         base_datos_pertenencias.guardar_pertenencia(idEstudiante, id_objeto, estado, fecha_actual, img_name)
 
-    def registrar_salida_pertenencias(pertenecias):
+    def registrar_salida_pertenencias(pertenencias):
         try:
             base_datos_pertenencias = BaseDatosPertenencias("basededatos.db")
-            for pertenencia in pertenecias:
+            for pertenencia in pertenencias:
+                idPertenencia = pertenencia.get('idPertenencia')
+                estado = pertenencia.get('estado')
+                if not idPertenencia or estado is None:
+                    continue  # O puedes manejar el error de otra forma
+
                 # Actualizar el estado de la pertenencia en la base de datos
-                if not base_datos_pertenencias.cambiar_estado_pertenencias(pertenencia, 2):
+                if not base_datos_pertenencias.cambiar_estado_pertenencias(idPertenencia, estado):
                     return False
             return True
         except Exception as e:
@@ -58,7 +63,6 @@ class PertenenciasServices:
     
     def consultar_pertencia_por_busqueda(busqueda):
         base_datos_pertenencias = BaseDatosPertenencias("basededatos.db")
-        # Consultar pertenencias por código de estudiante y fecha actual
         pertenencias = base_datos_pertenencias.consultar_pertenencias_por_busqueda(busqueda)
         
         if not pertenencias:

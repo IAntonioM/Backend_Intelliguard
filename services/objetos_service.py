@@ -2,7 +2,6 @@ import time
 import os
 import cv2
 from matplotlib import pyplot
-import imutils
 import numpy as np
 import tempfile
 import subprocess
@@ -24,8 +23,8 @@ class ObjetosServices:
         if posicion == -1:
             return -1
         else:
+            print(posicion)
             base_datos_objetos = BaseDatosObjetos("basededatos.db")
             resultado = base_datos_objetos.consultar_objeto_por_id(posicion)
             return resultado
-        
 

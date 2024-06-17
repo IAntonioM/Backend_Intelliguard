@@ -9,6 +9,31 @@ class ReconocimientoFacial:
     def __init__(self):
         # Aquí podrías inicializar cualquier cosa necesaria para tu servicio
         pass
+    
+    def reconocimiento_facial(img_file):
+        reconocimiento_facial = cv2.face.FisherFaceRecognizer_create()
+        reconocimiento_facial.read(os.path.join('models', 'modelFisherFace.xml'))
+        # Guardar imagen temporalmente
+        imagen = cv2.imdecode(np.frombuffer(img_file.read(), np.uint8), cv2.IMREAD_COLOR)
+        # Convertir la imagen a escala de grises
+        gray = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
+        # Detectar rostros
+        clasificacion_facial = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+        rostros = clasificacion_facial.detectMultiScale(gray, 1.3, 5)
+        # Verificar si se detectaron rostros
+        if len(rostros) == 0:
+            return -1, 0  # Devolver un código de error y un porcentaje de similitud de 0
+        # Procesar cada rostro detectado
+        for (x, y, w, h) in rostros:
+            rostro = gray[y:y+h, x:x+w]
+            rostro = cv2.resize(rostro, (150, 150), interpolation=cv2.INTER_CUBIC)
+            result_id, similitud = reconocimiento_facial.predict(rostro)
+            if similitud < 500:
+                porcentaje_similitud = 100 - int(similitud / 5)
+                return result_id, porcentaje_similitud
+            else:
+                return -1, 0  # Devolver un código de error y un porcentaje de similitud de 0 si la similitud es alta
+
 
     def capturar_rostro(self,video_path, estudiante_path, codigoEstudiante):
         try:
@@ -87,28 +112,6 @@ class ReconocimientoFacial:
             reconocimiento_facial.write(modelo_path)
             print("Modelo almacenado en", modelo_path)
 
-    def reconocimiento_facial(img_file):
-        reconocimiento_facial = cv2.face.FisherFaceRecognizer_create()
-        reconocimiento_facial.read(os.path.join('models', 'modelFisherFace.xml'))
-        # Guardar imagen temporalmente
-        imagen = cv2.imdecode(np.frombuffer(img_file.read(), np.uint8), cv2.IMREAD_COLOR)
-        # Convertir la imagen a escala de grises
-        gray = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
-        # Detectar rostros
-        clasificacion_facial = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-        rostros = clasificacion_facial.detectMultiScale(gray, 1.3, 5)
-        # Verificar si se detectaron rostros
-        if len(rostros) == 0:
-            return -1, 0  # Devolver un código de error y un porcentaje de similitud de 0
-        # Procesar cada rostro detectado
-        for (x, y, w, h) in rostros:
-            rostro = gray[y:y+h, x:x+w]
-            rostro = cv2.resize(rostro, (150, 150), interpolation=cv2.INTER_CUBIC)
-            result_id, similitud = reconocimiento_facial.predict(rostro)
-            if similitud < 500:
-                porcentaje_similitud = 100 - int(similitud / 5)
-                return result_id, porcentaje_similitud
-            else:
-                return -1, 0  # Devolver un código de error y un porcentaje de similitud de 0 si la similitud es alta
+    
 
         

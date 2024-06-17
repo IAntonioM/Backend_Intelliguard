@@ -36,6 +36,47 @@ class BaseDatosUsuarios:
             return Usuario(id_usuario, usuario, hash_contraseña, id_rol, rol)
         else:
             return None
+        
+    def listar_usuarios(self):
+        try:
+            self.cursor.execute("""
+                SELECT u.id_usuario, u.usuario, u.hash_contraseña, u.id_rol, r.rol
+                FROM usuarios u
+                LEFT JOIN rol_usuario r ON u.id_rol = r.id
+            """)
+            resultados = self.cursor.fetchall()
+            usuarios = []
+            for resultado in resultados:
+                id_usuario, usuario, hash_contraseña, id_rol, rol = resultado
+                usuarios.append(Usuario(id_usuario, usuario, hash_contraseña, id_rol, rol))
+            return usuarios
+        except Exception as e:
+            print(f"Error al listar usuarios: {e}")
+            return []
+    
+    def editar_usuario(self, id_usuario, nuevo_usuario, nueva_contraseña, nuevo_id_rol):
+        if nueva_contraseña:  # Si la nueva contraseña no está vacía
+            # Actualizar tanto el nombre de usuario como la contraseña y el rol
+            self.cursor.execute("""
+                UPDATE usuarios 
+                SET usuario = ?, hash_contraseña = ?, id_rol = ? 
+                WHERE id_usuario = ?
+            """, (nuevo_usuario, nueva_contraseña, nuevo_id_rol, id_usuario))
+        else:
+            # Solo actualizar el nombre de usuario y el rol
+            self.cursor.execute("""
+                UPDATE usuarios 
+                SET usuario = ?, id_rol = ? 
+                WHERE id_usuario = ?
+            """, (nuevo_usuario, nuevo_id_rol, id_usuario))
+            
+        self.conexion.commit()
+
+
+    def eliminar_usuario(self, id_usuario):
+        self.cursor.execute("DELETE FROM usuarios WHERE id_usuario = ?", (id_usuario,))
+        self.conexion.commit()
+
     def eliminar_tabla_usuarios(nombre_archivo):
         conexion = sqlite3.connect(nombre_archivo)
         cursor = conexion.cursor()

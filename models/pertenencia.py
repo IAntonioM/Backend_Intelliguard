@@ -86,12 +86,9 @@ class BaseDatosPertenencias:
             JOIN estado_pertenencias ep ON rp.idEstado = ep.id
             WHERE e.Nombres LIKE ? OR e.codigoEstudiante LIKE ?;
         """
-
         self.cursor.execute(script_sql, (f"%{busqueda}%", f"%{busqueda}%"))
-
         resultados = self.cursor.fetchall()
         pertenencias = []
-
         for resultado in resultados:
             pertenencia = Pertenencia(
                 id_pertenencia=resultado[0],
@@ -105,7 +102,6 @@ class BaseDatosPertenencias:
                 nombres_estudiante=resultado[8]
             )
             pertenencias.append(pertenencia)
-
         return pertenencias
     
     # Método en el modelo para cambiar el estado de pertenencias

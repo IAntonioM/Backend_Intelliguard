@@ -70,28 +70,22 @@ def consultar_pertenencia_por_id():
 
 @pertenencias_bp.route('/pertenencia/consultar-pertenencia-busqueda', methods=['POST'])
 @jwt_required()
-@role_required('Personal')
+@role_required('Personal','Administrador')
 def consultar_pertenencia_por_busqueda():
     busqueda = request.form.get('busqueda')
     UPLOAD_FOLDER = 'uploads/pertenencia'
     if not busqueda:
         busqueda=''
-
     try:
         pertenencias = PertenenciasServices.consultar_pertencia_por_busqueda(busqueda)
         if pertenencias == -1:
             return jsonify({'error': 'Sin restulados de Busqueda ...'}), 404
         else:
-            # Formatear la respuesta JSON con la lista de pertenencias
             pertenencias_json = []
             for pertenencia in pertenencias:
-                # Obtener la ruta completa de la imagen
                 imagen_path = os.path.join(current_app.root_path, UPLOAD_FOLDER, pertenencia.imagen_pertenencia)
-
-                # Codificar la imagen en base64
                 with open(imagen_path, 'rb') as imagen_file:
                     imagen_base64 = base64.b64encode(imagen_file.read()).decode('utf-8')
-
                 pertenencias_json.append({
                     'idPertenencia': pertenencia.id_pertenencia,
                     'idEstudiante': pertenencia.id_estudiante,
@@ -103,7 +97,6 @@ def consultar_pertenencia_por_busqueda():
                     'nombresEstudiante' : pertenencia.nombres_estudiante,
                     'ImagenPertenencia': f'data:image/jpeg;base64,{imagen_base64}',
                 })
-
             return jsonify({'pertenencias': pertenencias_json}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -114,16 +107,21 @@ def consultar_pertenencia_por_busqueda():
 @role_required('Personal')
 def registrar_salida_pertenencia():
     # Obtener la lista de pertenencias del cuerpo de la solicitud
-    pertenencias = request.json  # Se asume que se envía la lista de pertenencias en formato JSON
-    if not isinstance(pertenencias, list):
+    data = request.get_json()  # Se asume que se envía la lista de pertenencias en formato JSON
+    if not isinstance(data, dict):
         return jsonify({'error': 'Formato de datos incorrecto'}), 400
+
+    idRegistros = data.get('idRegistros')  # Obtener la lista de registros
+    if not idRegistros or not isinstance(idRegistros, list):
+        return jsonify({'error': 'Formato de datos incorrecto'}), 400
+
     try:
-        PertenenciasServices.registrar_salida_pertenencias(pertenencias)
+        PertenenciasServices.registrar_salida_pertenencias(idRegistros)
         return jsonify({'message': 'Salida de pertenencias registrada correctamente'}), 200
-    
     except Exception as e:
         print(f"Error al registrar salida de pertenencias: {e}")
         return jsonify({'error': 'Ocurrió un error al procesar la solicitud'}), 500
+
 
 
 

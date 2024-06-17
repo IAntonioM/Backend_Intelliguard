@@ -28,9 +28,6 @@ class DeteccionObjetos:
 
                 # Obtener el texto resultante
                 label = ', '.join(etiquetas_objetos)
-                if label in ["Laptop", "laptop"]:
-                    label=0
-                print("Proceso de detección de objetos completado.",label)
                 return label
             else:
                 print("No se detectaron objetos en la imagen.")
