@@ -6,6 +6,10 @@ import os
 from flask import current_app, send_from_directory
 import base64
 from utils.role_decorador import role_required
+from openpyxl import Workbook
+from io import BytesIO
+from models.pertenencia import BaseDatosPertenencias
+from flask import send_file
 
 
 pertenencias_bp = Blueprint('pertenencias', __name__)
@@ -124,12 +128,45 @@ def registrar_salida_pertenencia():
 
 
 
+@pertenencias_bp.route('/pertenencia/generar-excel', methods=['GET'])
+def generar_excel():
+    base_datos_pertenencias = BaseDatosPertenencias("basededatos.db")
+    pertenencias = base_datos_pertenencias.obtener_todas_pertenencias()
+    # Crear un archivo Excel en memoria
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Pertenencias"
+    headers = ['ID', 'Codigo Estudiante', 'ID Objeto', 'Estado', 'Fecha', 'Objeto', 'Estudiante', 'Imagen']
+    ws.append(headers)
+    for pertenencia in pertenencias:
+        ws.append([
+            pertenencia.id_pertenencia,
+            pertenencia.id_estudiante,
+            pertenencia.id_objeto,
+            pertenencia.estado,
+            pertenencia.fecha,
+            pertenencia.nombre_objeto,
+            pertenencia.nombres_estudiante,
+            pertenencia.imagen_pertenencia
+        ])
+    excel_buffer = BytesIO()
+    wb.save(excel_buffer)
+    excel_buffer.seek(0)
+    return send_file(
+        excel_buffer,
+        as_attachment=True,
+        download_name="Pertenencias.xlsx",
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+
+
+
 
 # Ruta para mostrar la imagen de una pertenencia
-@pertenencias_bp.route('/pertenencia/imagen/<filename>')
-def mostrar_imagen_pertenencia(filename):
-    try:
-        return PertenenciasServices.mostrar_imagen_pertencia(filename)
-    except Exception as e:
-        print(f"Error al mostrar la imagen: {e}")
-        return jsonify({'error': 'Ocurrió un error al mostrar la imagen'}), 500
+# @pertenencias_bp.route('/pertenencia/imagen/<filename>')
+# def mostrar_imagen_pertenencia(filename):
+#     try:
+#         return PertenenciasServices.mostrar_imagen_pertencia(filename)
+#     except Exception as e:
+#         print(f"Error al mostrar la imagen: {e}")
+#         return jsonify({'error': 'Ocurrió un error al mostrar la imagen'}), 500

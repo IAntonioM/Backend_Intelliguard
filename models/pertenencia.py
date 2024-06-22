@@ -13,7 +13,6 @@ class Pertenencia:
         self.nombre_objeto = nombre_objeto  # Nuevo atributo para almacenar el nombre del objeto
         self.nombres_estudiante = nombres_estudiante  # Nuevo atributo para almacenar el nombre del objeto
 
-
 class BaseDatosPertenencias:
     def __init__(self, nombre_archivo):
         self.conexion = sqlite3.connect(nombre_archivo)
@@ -55,9 +54,9 @@ class BaseDatosPertenencias:
         JOIN objetos o ON rp.idObjeto = o.idObjeto
         JOIN estudiantes e ON rp.idEstudiante = e.idEstudiante
         JOIN estado_pertenencias ep ON rp.idEstado = ep.id
-        WHERE rp.idEstudiante = ? AND rp.idEstado = ? AND substr(rp.Fecha, 1, 10) = ?
+        WHERE rp.idEstudiante = ? AND rp.idEstado = ?
         """
-        self.cursor.execute(query, (idEstudiante, idEstado, fecha_actual))
+        self.cursor.execute(query, (idEstudiante, idEstado))
         resultados = self.cursor.fetchall()
         pertenencias = []
 
@@ -123,3 +122,29 @@ class BaseDatosPertenencias:
         self.cursor.execute("DELETE FROM registro_pertenencias")
         self.conexion.commit()
 
+    def obtener_todas_pertenencias(self):
+            query = """
+                SELECT rp.idPertenencia, e.codigoEstudiante, rp.idObjeto, ep.estado, rp.Fecha, o.Nombre AS nombreObjeto, 
+                e.Nombres AS nombreEstudiante, rp.imagenPertenencia
+                FROM registro_pertenencias rp
+                JOIN objetos o ON rp.idObjeto = o.idObjeto
+                JOIN estudiantes e ON rp.idEstudiante = e.idEstudiante
+                JOIN estado_pertenencias ep ON rp.idEstado = ep.id
+            """
+            self.cursor.execute(query)
+            resultados = self.cursor.fetchall()
+            pertenencias = []
+            for resultado in resultados:
+                pertenencia = Pertenencia(
+                    id_pertenencia=resultado[0],
+                    id_estudiante=resultado[1],
+                    id_objeto=resultado[2],
+                    id_estado=resultado[3],  
+                    estado=resultado[3],  
+                    fecha=resultado[4],  
+                    nombre_objeto=resultado[5],  
+                    nombres_estudiante=resultado[6], 
+                    imagen_pertenencia=resultado[7] 
+                )
+                pertenencias.append(pertenencia)
+            return pertenencias

@@ -7,3 +7,4 @@ opencv-contrib-python
 bcrypt
 flask-jwt-extended
 ultralytics
+openpyxl

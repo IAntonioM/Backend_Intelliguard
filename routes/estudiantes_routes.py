@@ -22,6 +22,8 @@ def identificar_estudiante():
             'idEstudiante': resultado.id_estudiante,
             'codigoEstudiante': resultado.codigo_estudiante,
             'Nombres':  resultado.nombres,
+            'Carrera':  resultado.carrera,
+            'PlanEstudiante':  resultado.planEstudiante,
             'Similitud': porcentaje_similitud
         }), 200
 

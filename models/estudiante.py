@@ -1,10 +1,12 @@
 import sqlite3
 
 class Estudiante:
-    def __init__(self, id_estudiante, nombres, codigo_estudiante):
+    def __init__(self, id_estudiante, nombres, codigo_estudiante,carrera,planEstudiante):
         self.id_estudiante = id_estudiante
         self.nombres = nombres
         self.codigo_estudiante = codigo_estudiante
+        self.carrera = carrera
+        self.planEstudiante = planEstudiante
 
 class BaseDatosEstudiantes:
     def __init__(self, nombre_archivo):
@@ -16,7 +18,9 @@ class BaseDatosEstudiantes:
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS estudiantes (
                                 idEstudiante INTEGER PRIMARY KEY AUTOINCREMENT,
                                 Nombres TEXT,
-                                codigoEstudiante TEXT)''')
+                                codigoEstudiante TEXT,
+                                Carrera TEXT,
+                                planEstudiante TEXT)''')
         self.conexion.commit()
 
     def guardar_estudiante(self, estudiante):
@@ -31,7 +35,7 @@ class BaseDatosEstudiantes:
         self.cursor.execute("SELECT * FROM estudiantes WHERE codigoEstudiante = ?", (codigo_estudiante,))
         resultado = self.cursor.fetchone()
         if resultado:
-            return Estudiante(resultado[0], resultado[1], resultado[2])
+            return Estudiante(resultado[0], resultado[1], resultado[2], resultado[3], resultado[4])
         else:
             return None
     def borrar_todos_los_estudiantes(self):
