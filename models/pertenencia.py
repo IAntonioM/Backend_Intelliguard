@@ -1,150 +1,244 @@
 import sqlite3
 from datetime import datetime
-
 class Pertenencia:
-    def __init__(self, id_pertenencia, id_estudiante, id_objeto, id_estado, estado, fecha, imagen_pertenencia,nombre_objeto,nombres_estudiante):
-        self.id_pertenencia = id_pertenencia
-        self.id_estudiante = id_estudiante
-        self.id_objeto = id_objeto
-        self.id_estado = id_estado
-        self.estado = estado
-        self.fecha = fecha
+    def __init__(self, codigo_pertenencia, tipo_objeto, imagen_pertenencia, id_estudiante,id_ultimo_estado,fecha_ultima_actividad,estado_text,objeto_text):
+        self.codigo_pertenencia = codigo_pertenencia
+        self.tipo_objeto = tipo_objeto
         self.imagen_pertenencia = imagen_pertenencia
-        self.nombre_objeto = nombre_objeto  # Nuevo atributo para almacenar el nombre del objeto
-        self.nombres_estudiante = nombres_estudiante  # Nuevo atributo para almacenar el nombre del objeto
+        self.id_estudiante = id_estudiante
+        self.id_ultimo_estado = id_ultimo_estado
+        self.fecha_ultima_actividad = fecha_ultima_actividad
+        self.estado_text = estado_text
+        self.objeto_text=objeto_text
 
-class BaseDatosPertenencias:
+class PertenenciaEstudiante:
+    def __init__(self, codigo_pertenencia, tipo_objeto, imagen_pertenencia, id_estudiante,id_ultimo_estado,fecha_ultima_actividad,estado_text,objeto_text,codigo_estudiante,nombres_estudiante,carrera_estudiante,plan_estudiante):
+        self.codigo_pertenencia = codigo_pertenencia
+        self.tipo_objeto = tipo_objeto
+        self.imagen_pertenencia = imagen_pertenencia
+        self.id_estudiante = id_estudiante
+        self.id_ultimo_estado = id_ultimo_estado
+        self.fecha_ultima_actividad = fecha_ultima_actividad
+        self.estado_text = estado_text
+        self.objeto_text=objeto_text
+        self.codigo_estudiante=codigo_estudiante
+        self.nombres_estudiante=nombres_estudiante
+        self.carrera_estudiante=carrera_estudiante
+        self.plan_estudiante=plan_estudiante
+
+
+class BaseDatosPertenencia:
     def __init__(self, nombre_archivo):
         self.conexion = sqlite3.connect(nombre_archivo)
         self.cursor = self.conexion.cursor()
         self.crear_tabla_pertenencias()
 
     def crear_tabla_pertenencias(self):
-        self.cursor.execute('''CREATE TABLE IF NOT EXISTS registro_pertenencias (
-            idPertenencia INTEGER PRIMARY KEY AUTOINCREMENT,
-            idEstudiante INTEGER,
-            idObjeto INTEGER,
-            idEstado INTEGER,
-            Estado TEXT,
-            Fecha DATETIME,
-            imagenPertenencia TEXT,
-            FOREIGN KEY (idEstudiante) REFERENCES estudiantes(idEstudiante),
-            FOREIGN KEY (idObjeto) REFERENCES objetos(idObjeto),
-            FOREIGN KEY (idEstado) REFERENCES estado_pertenencias(id)
-        )''')
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS pertenencias (
+                                codigoPertenencia INTEGER PRIMARY KEY AUTOINCREMENT,
+                                tipoObjeto INTEGER,
+                                imagenPertenencia TEXT,
+                                idEstudiante INTEGER,
+                                idUltimoEstado INTEGER,
+                                FechaUltimaActividad INTEGER,
+                                FOREIGN KEY (idUltimoEstado) REFERENCES estado_pertenencias(id),
+                                FOREIGN KEY (idEstudiante) REFERENCES estudiantes(idEstudiante))''')
         self.conexion.commit()
 
-    def guardar_pertenencia(self, id_estudiante, id_objeto, idEstado, fecha, imagen_pertenencia):
+    def registrar_pertenencia(self, tipo_objeto, imagen_pertenencia, id_estudiante, id_ultimo_estado, fecha_ultima_actividad):
         try:
-            self.cursor.execute('''INSERT INTO registro_pertenencias 
-                                   (idEstudiante, idObjeto, idEstado, Fecha, imagenPertenencia) 
-                                   VALUES (?, ?, ?, ?, ?)''',
-                                (id_estudiante, id_objeto, idEstado, fecha, imagen_pertenencia))
+            self.cursor.execute('''INSERT INTO pertenencias (tipoObjeto, imagenPertenencia, idEstudiante, idUltimoEstado, FechaUltimaActividad) 
+                                    VALUES (?, ?, ?, ?, ?)''', 
+                                (tipo_objeto, imagen_pertenencia, id_estudiante, id_ultimo_estado, fecha_ultima_actividad))
             self.conexion.commit()
+            return self.cursor.lastrowid  # Devolver el ID del registro recién insertado
         except sqlite3.Error as e:
             print(f"Error al guardar la pertenencia: {e}")
             self.conexion.rollback()
-            return -1
-        return 1
-    
-    def consultar_pertencia_por_idEstudiante_fecha(self, idEstudiante, idEstado, fecha_actual):
-        query = """
-        SELECT rp.*, ep.estado AS Estado, o.Nombre AS nombreObjeto, e.Nombres AS nombreEstudiante
-        FROM registro_pertenencias rp
-        JOIN objetos o ON rp.idObjeto = o.idObjeto
-        JOIN estudiantes e ON rp.idEstudiante = e.idEstudiante
-        JOIN estado_pertenencias ep ON rp.idEstado = ep.id
-        WHERE rp.idEstudiante = ? AND rp.idEstado = ?
-        """
-        self.cursor.execute(query, (idEstudiante, idEstado))
-        resultados = self.cursor.fetchall()
-        pertenencias = []
+            return -1  # Error al guardar la pertenencia
 
-        for resultado in resultados:
-            pertenencia = Pertenencia(
-                id_pertenencia=resultado[0],
-                id_estudiante=resultado[1],
-                id_objeto=resultado[2],
-                fecha=resultado[3],
-                imagen_pertenencia=resultado[4],
-                id_estado=resultado[5],
-                estado=resultado[6],
-                nombre_objeto=resultado[7],
-                nombres_estudiante=resultado[8]
-            )
-            pertenencias.append(pertenencia)
-
-        return pertenencias
-    
-    def consultar_pertenencias_por_busqueda(self, busqueda):
-        script_sql = """
-            SELECT rp.*, ep.estado AS Estado , o.Nombre AS nombreObjeto, e.Nombres AS nombreEstudiante
-            FROM registro_pertenencias rp
-            JOIN objetos o ON rp.idObjeto = o.idObjeto
-            JOIN estudiantes e ON rp.idEstudiante = e.idEstudiante
-            JOIN estado_pertenencias ep ON rp.idEstado = ep.id
-            WHERE e.Nombres LIKE ? OR e.codigoEstudiante LIKE ?;
-        """
-        self.cursor.execute(script_sql, (f"%{busqueda}%", f"%{busqueda}%"))
-        resultados = self.cursor.fetchall()
-        pertenencias = []
-        for resultado in resultados:
-            pertenencia = Pertenencia(
-                id_pertenencia=resultado[0],
-                id_estudiante=resultado[1],
-                id_objeto=resultado[2],
-                fecha=resultado[3],
-                imagen_pertenencia=resultado[4],
-                id_estado=resultado[5],
-                estado=resultado[6],
-                nombre_objeto=resultado[7],
-                nombres_estudiante=resultado[8]
-            )
-            pertenencias.append(pertenencia)
-        return pertenencias
-    
-    # Método en el modelo para cambiar el estado de pertenencias
-    def cambiar_estado_pertenencias(self, id_pertenencia, idEstado):
+    def actualizar_pertenencia_por_actividad(self, codigo_pertenencia, nuevo_estado, nueva_fecha_actividad):
         try:
-            # Actualizar el estado de la pertenencia en la base de datos
-            self.cursor.execute('''UPDATE registro_pertenencias 
-                                SET idEstado = ? 
-                                WHERE idPertenencia = ?''',
-                                (idEstado, id_pertenencia))
+            self.cursor.execute('''UPDATE pertenencias 
+                                SET idUltimoEstado = ?, FechaUltimaActividad = ? 
+                                WHERE codigoPertenencia = ?''', 
+                                (nuevo_estado, nueva_fecha_actividad, codigo_pertenencia))
+            self.conexion.commit()
+            return self.cursor.rowcount  # Devolver el número de filas afectadas
+        except sqlite3.Error as e:
+            print(f"Error al actualizar la pertenencia: {e}")
+            self.conexion.rollback()
+            return -1  # Error al actualizar la pertenencia
+        
+    def consultar_pertenencias_por_estado_estudiante(self, id_estado, id_estudiante):
+        query = """
+            SELECT p.codigoPertenencia, p.tipoObjeto, p.imagenPertenencia, p.idEstudiante, p.idUltimoEstado,
+                    p.FechaUltimaActividad, ep.estado, o.Nombre
+            FROM pertenencias p
+            JOIN estado_pertenencias ep ON p.idUltimoEstado = ep.id
+            JOIN objetos o ON p.tipoObjeto = o.idObjeto
+            WHERE p.idUltimoEstado = ? AND p.idEstudiante = ?
+        """
+        self.cursor.execute(query, (id_estado, id_estudiante))
+        resultados = self.cursor.fetchall()
+        pertenencias = []
+        for resultado in resultados:
+            pertenencia = Pertenencia(
+                codigo_pertenencia=resultado[0],
+                tipo_objeto=resultado[1],
+                imagen_pertenencia=resultado[2],
+                id_estudiante=resultado[3],
+                id_ultimo_estado=resultado[4],
+                fecha_ultima_actividad=resultado[5],
+                estado_text=resultado[6],
+                objeto_text=resultado[7]
+            )
+            pertenencias.append(pertenencia)
+        return pertenencias
+
+    def consultar_pertenencias_codigos(self, resultados_finales):
+        lista_codigos = [resultado['codigo'] for resultado in resultados_finales]
+        placeholders = ','.join(['?' for _ in lista_codigos])
+        
+        # Consulta para obtener las pertenencias según los códigos proporcionados
+        query = f"""
+            SELECT p.codigoPertenencia, p.tipoObjeto, p.imagenPertenencia, p.idEstudiante, p.idUltimoEstado, p.fechaUltimaActividad,ep.estado
+            FROM pertenencias p
+            JOIN estado_pertenencias ep ON p.idUltimoEstado = ep.id
+            WHERE p.codigoPertenencia IN ({placeholders})
+            ORDER BY CASE p.codigoPertenencia
+            {''.join([f' WHEN {codigo} THEN {i}' for i, codigo in enumerate(lista_codigos)])}
+            END
+        """
+
+        self.cursor.execute(query, lista_codigos)
+        resultados = self.cursor.fetchall()
+        pertenencias = []
+
+        for resultado in resultados:
+            pertenencia = Pertenencia(
+                codigo_pertenencia=resultado[0],
+                tipo_objeto=resultado[1],
+                imagen_pertenencia=resultado[2],
+                id_estudiante=resultado[3],
+                id_ultimo_estado=resultado[4],
+                fecha_ultima_actividad=resultado[5],
+                estado_text=resultado[6],
+                objeto_text=""
+            )
+            pertenencias.append(pertenencia)
+
+        return pertenencias
+    
+    def consultar_pertenencias_por_tipo_y_estudiante(self, tipo_objeto, id_estudiante):
+        print("consulta")
+        query = """
+            SELECT p.codigoPertenencia, p.tipoObjeto, p.imagenPertenencia, e.Nombres, e.codigoEstudiante
+            FROM pertenencias p
+            JOIN estudiantes e ON p.idEstudiante = e.idEstudiante
+            WHERE p.tipoObjeto = ? AND p.idEstudiante = ?
+        """
+        print("consulta1")
+        self.cursor.execute(query, (tipo_objeto, id_estudiante))
+        print("consulta2")
+        resultados = self.cursor.fetchall()
+        print("consulta3")
+        pertenencias = []
+
+        if not resultados:
+            return -1
+
+        for resultado in resultados:
+            print(resultado[3])
+            pertenencia = Pertenencia(
+                codigo_pertenencia=resultado[0],
+                tipo_objeto=resultado[1],
+                imagen_pertenencia=resultado[2],
+                id_estudiante=resultado[3]
+            )
+            pertenencias.append(pertenencia)
+
+        return pertenencias
+
+    def consultar_pertencias_estudiante_busqueda(self, datosEstudiante="", estadoPertenencia="", codigoPertenencia=""):
+        query = """
+            SELECT p.codigoPertenencia, p.tipoObjeto, p.imagenPertenencia, p.idEstudiante, p.idUltimoEstado,
+                    p.FechaUltimaActividad, ep.estado, o.Nombre, e.codigoEstudiante, e.Nombres, e.Carrera, e.planEstudiante
+            FROM pertenencias p
+            JOIN estado_pertenencias ep ON p.idUltimoEstado = ep.id
+            JOIN objetos o ON p.tipoObjeto = o.idObjeto
+            JOIN estudiantes e ON p.idEstudiante = e.idEstudiante
+            WHERE 1=1
+        """
+        params = []
+        if datosEstudiante:
+            query += " AND (e.Nombres LIKE ? OR e.codigoEstudiante LIKE ?)"
+            params.extend([f"%{datosEstudiante}%", f"%{datosEstudiante}%"])
+        if estadoPertenencia:
+            query += " AND ep.estado LIKE ?"
+            params.append(f"%{estadoPertenencia}%")
+        if codigoPertenencia:
+            query += " AND p.codigoPertenencia LIKE ?"
+            params.append(f"%{codigoPertenencia}%")
+        self.cursor.execute(query, tuple(params))
+        resultados = self.cursor.fetchall()
+        pertenencias = []
+        for resultado in resultados:
+            pertenenciaEstudiante = PertenenciaEstudiante(
+                codigo_pertenencia=resultado[0],
+                tipo_objeto=resultado[1],
+                imagen_pertenencia=resultado[2],
+                id_estudiante=resultado[3],
+                id_ultimo_estado=resultado[4],
+                fecha_ultima_actividad=resultado[5],
+                estado_text=resultado[6],
+                objeto_text=resultado[7],
+                codigo_estudiante=resultado[8],
+                nombres_estudiante=resultado[9],
+                carrera_estudiante=resultado[10],
+                plan_estudiante=resultado[11]
+            )
+            pertenencias.append(pertenenciaEstudiante)
+        pertenencias_ordenadas = sorted(pertenencias, 
+                                        key=lambda x: datetime.strptime(x.fecha_ultima_actividad, "%Y-%m-%d_%H-%M-%S"),reverse=True)
+        return pertenencias_ordenadas
+
+    
+    def cambiar_estado_pertenencias(self, codPertenencia, idEstado,fecha_hora_actual):
+        try:
+            self.cursor.execute('''UPDATE pertenencias 
+                                SET idUltimoEstado = ?, FechaUltimaActividad = ?
+                                WHERE codigoPertenencia = ?''',
+                                (idEstado, fecha_hora_actual, codPertenencia))
             self.conexion.commit()
             return True
         except sqlite3.Error as e:
             print(f"Error al cambiar el estado de la pertenencia: {e}")
             self.conexion.rollback()
             return False
-        
-    def borrar_todas_las_pertenencias(self):
-        self.cursor.execute("DELETE FROM registro_pertenencias")
-        self.conexion.commit()
 
-    def obtener_todas_pertenencias(self):
-            query = """
-                SELECT rp.idPertenencia, e.codigoEstudiante, rp.idObjeto, ep.estado, rp.Fecha, o.Nombre AS nombreObjeto, 
-                e.Nombres AS nombreEstudiante, rp.imagenPertenencia
-                FROM registro_pertenencias rp
-                JOIN objetos o ON rp.idObjeto = o.idObjeto
-                JOIN estudiantes e ON rp.idEstudiante = e.idEstudiante
-                JOIN estado_pertenencias ep ON rp.idEstado = ep.id
-            """
-            self.cursor.execute(query)
-            resultados = self.cursor.fetchall()
-            pertenencias = []
-            for resultado in resultados:
-                pertenencia = Pertenencia(
-                    id_pertenencia=resultado[0],
-                    id_estudiante=resultado[1],
-                    id_objeto=resultado[2],
-                    id_estado=resultado[3],  
-                    estado=resultado[3],  
-                    fecha=resultado[4],  
-                    nombre_objeto=resultado[5],  
-                    nombres_estudiante=resultado[6], 
-                    imagen_pertenencia=resultado[7] 
-                )
-                pertenencias.append(pertenencia)
-            return pertenencias
+    def actualizar_pertenencia(self, codigo_pertenencia, tipo_objeto, imagen_pertenencia, id_estudiante):
+        try:
+            self.cursor.execute('''UPDATE pertenencias
+                                   SET tipoObjeto = ?, imagenPertenencia = ?, idEstudiante = ?
+                                   WHERE codigoPertenencia = ?''',
+                                (tipo_objeto, imagen_pertenencia, id_estudiante, codigo_pertenencia))
+            self.conexion.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Error al actualizar la pertenencia: {e}")
+            self.conexion.rollback()
+            return False
+
+    def eliminar_pertenencia(self, codigo_pertenencia):
+        try:
+            self.cursor.execute('''DELETE FROM pertenencias WHERE codigoPertenencia = ?''', (codigo_pertenencia,))
+            self.conexion.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Error al eliminar la pertenencia: {e}")
+            self.conexion.rollback()
+            return False
+        
+    def cerrar_conexion(self):
+        self.conexion.close()

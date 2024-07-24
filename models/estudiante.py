@@ -28,7 +28,7 @@ class BaseDatosEstudiantes:
         if self.consultar_estudiante_por_codigo(estudiante.codigo_estudiante):
             print(f"El estudiante con código {estudiante.codigo_estudiante} ya está registrado.")
             return
-        self.cursor.execute("INSERT INTO estudiantes (Nombres, codigoEstudiante) VALUES (?, ?)", (estudiante.nombres, estudiante.codigo_estudiante))
+        self.cursor.execute("INSERT INTO estudiantes (Nombres, codigoEstudiante,Carrera,planEstudiante) VALUES (?, ?,?,?)", (estudiante.nombres, estudiante.codigo_estudiante, estudiante.carrera, estudiante.planEstudiante))
         self.conexion.commit()
 
     def consultar_estudiante_por_codigo(self, codigo_estudiante):
@@ -38,6 +38,7 @@ class BaseDatosEstudiantes:
             return Estudiante(resultado[0], resultado[1], resultado[2], resultado[3], resultado[4])
         else:
             return None
+        
     def borrar_todos_los_estudiantes(self):
         self.cursor.execute("DELETE FROM estudiantes")
         self.conexion.commit()

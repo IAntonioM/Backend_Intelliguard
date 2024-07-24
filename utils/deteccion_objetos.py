@@ -11,43 +11,44 @@ class DeteccionObjetos:
         # Aquí podrías inicializar cualquier cosa necesaria para tu servicio
         pass
 
-    def identificarObjeto(img_archivo):
+    def identificarObjeto(imagen):
         try:
-            imagen = cv2.imread(img_archivo)
-            ruta_modelo = os.path.join('models', 'best.pt') 
+            ruta_modelo = os.path.join('models', 'ModelObjetoFinal.pt') 
             modelo = YOLO(ruta_modelo) 
-            resultados = modelo.predict(imagen, imgsz=640, conf=0.80)
+            resultados = modelo(imagen, imgsz=640, conf=0.80)
             if resultados is not None and len(resultados) > 0 and len(resultados[0].boxes) > 0:
-                etiquetas = [resultados[0].names[int(etiqueta)] for etiqueta in resultados[0].boxes.cls]
-                etiquetas_unidas = ', '.join(etiquetas)
-                return etiquetas_unidas
+                box = resultados[0].boxes[0]
+                x1, y1, x2, y2 = map(int, box.xyxy[0])
+                imagen_recortada = imagen[y1:y2, x1:x2]
+                etiqueta = resultados[0].names[int(box.cls)]
+                return etiqueta, imagen_recortada
             else:
                 print("No se encontraron objetos en la imagen.")
-                return -1
+                return -1, None
         except Exception as error:
             print(f"Error en la detección de objetos: {str(error)}")
-            return -1
+            return -1, None
         
         
-    # def entrenar_modelo_objeto(ruta_train, ruta_val, ruta_modelo, epochs=150, batch_size=16):
-    #     try:
-    #         modelo = YOLO('yolov8n.pt')
-    #         datos = {
-    #             'train': ruta_train,
-    #             'val': ruta_val
-    #         }
-    #         hyperparams = {
-    #             'epochs': epochs,
-    #             'batch_size': batch_size,
-    #         }
-    #         print("Comenzando el entrenamiento del modelo...")
-    #         modelo.train(data=datos, **hyperparams)
-    #         modelo.save(ruta_modelo)
-    #         print(f"Modelo entrenado guardado en: {ruta_modelo}")
-    #     except Exception as e:
-    #         print(f"Error durante el entrenamiento del modelo YOLOv8: {str(e)}")
-    # ruta_train = 'path/to/train'
-    # ruta_val = 'path/to/val'
-    # ruta_modelo = 'models/yolov8_best.pt'
-    # entrenar_modelo_objeto(ruta_train, ruta_val, ruta_modelo)
+    def entrenar_modelo_objeto(epochs=150, batch_size=16):
+        try:    
+            ruta_datos_train = 'path/to/train'
+            ruta_datos_tval = 'path/to/val'
+            ruta_modelo = 'models/ModeloObjetoFinal2.pt'
+            modelo = YOLO('yolov8n.pt')
+            datos = {
+                'train': ruta_datos_train,
+                'val': ruta_datos_tval
+            }
+            hyperparams = {
+                'epochs': epochs,
+                'batch_size': batch_size,
+            }
+            print("Comenzando el entrenamiento del modelo...")
+            modelo.train(data=datos, **hyperparams)
+            modelo.save(ruta_modelo)
+            print(f"Modelo entrenado guardado en: {ruta_modelo}")
+        except Exception as e:
+            print(f"Error durante el entrenamiento del modelo YOLOv8: {str(e)}")
+
 

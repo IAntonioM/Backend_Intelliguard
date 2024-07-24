@@ -35,20 +35,14 @@ class ReconocimientoFacial:
         try:
             if not os.path.exists(estudiante_path):
                 os.makedirs(estudiante_path)
-
             cap = cv2.VideoCapture(video_path)
-
             duracion_maxima = 10
             frames_por_segundo = cap.get(cv2.CAP_PROP_FPS)
             total_frames_a_capturar = int(frames_por_segundo * duracion_maxima)
-
             frames_capturados = 0
-
             rostro_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
             while True:
                 ret, frame = cap.read()
-                # if not ret or frames_capturados >= total_frames_a_capturar:
-                #     break
                 if not ret :
                     break
 
@@ -64,8 +58,6 @@ class ReconocimientoFacial:
                     recorte_rostro_gris = cv2.resize(recorte_rostro_gris, (150, 150), interpolation=cv2.INTER_CUBIC)
                     img_rostro = f'{codigoEstudiante}_{int(time.time())}.jpg'
                     cv2.imwrite(os.path.join(estudiante_path, img_rostro), recorte_rostro_gris)
-                # frames_capturados += 1
-
             cap.release()
             cv2.destroyAllWindows()
             print("Proceso de registro completado.")

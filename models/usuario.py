@@ -36,6 +36,36 @@ class BaseDatosUsuarios:
             return Usuario(id_usuario, usuario, hash_contraseña, id_rol, rol)
         else:
             return None
+
+    def consultar_usuario_personal(self, usuario):
+        rol_id=1
+        self.cursor.execute("""
+            SELECT u.id_usuario, u.usuario, u.hash_contraseña, u.id_rol, r.rol
+            FROM usuarios u
+            LEFT JOIN rol_usuario r ON u.id_rol = r.id
+            WHERE u.usuario = ? AND u.id_rol = ?
+        """, (usuario, rol_id))
+        resultado = self.cursor.fetchone()
+        if resultado:
+            id_usuario, usuario, hash_contraseña, id_rol, rol = resultado
+            return Usuario(id_usuario, usuario, hash_contraseña, id_rol, rol)
+        else:
+            return None
+        
+    def consultar_usuario_administrador(self, usuario):
+        rol_id=2
+        self.cursor.execute("""
+            SELECT u.id_usuario, u.usuario, u.hash_contraseña, u.id_rol, r.rol
+            FROM usuarios u
+            LEFT JOIN rol_usuario r ON u.id_rol = r.id
+            WHERE u.usuario = ? AND u.id_rol = ?
+        """, (usuario, rol_id))
+        resultado = self.cursor.fetchone()
+        if resultado:
+            id_usuario, usuario, hash_contraseña, id_rol, rol = resultado
+            return Usuario(id_usuario, usuario, hash_contraseña, id_rol, rol)
+        else:
+            return None
         
     def listar_usuarios(self):
         try:

@@ -36,9 +36,11 @@ def registrar_estudiante_video():
     file = request.files['file']
     codigoEstudiante = request.form.get('codigoEstudiante')
     nombCompletos = request.form.get('NombreCompleto')
+    carrera = request.form.get('carrera')
+    planEstudiante = request.form.get('planEstudiante')
     if file.filename == '':
         return jsonify({'error': 'Nombre de archivo vacío'}), 400
-    estudiantes_service.registrar_estudiante(file,nombCompletos,codigoEstudiante)
+    estudiantes_service.registrar_estudiante(file,nombCompletos,codigoEstudiante,carrera,planEstudiante)
     return jsonify({'mensaje': 'Registro de estudiantes completado','Nombres':f'{nombCompletos}','CodEstudiante':f'{codigoEstudiante}'}), 200
 
 
